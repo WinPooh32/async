@@ -10,23 +10,23 @@ Run async code with safe!
 ```Go
 package main
 
-import(
-    "fmt"
+import (
+	"fmt"
 
-    "github.com/WinPooh32/async"
+	"github.com/WinPooh32/async"
 )
 
-func main(){
-    ch := async.Go(func(ch chan<- async.Option[string]) {
+func main() {
+	ch := async.Go(func(ch chan<- async.Option[string]) {
 		ch <- async.MakeValue("Hello Async!")
 	})
 
 	value, err := async.Await(ch)
 	if err != nil {
-        ...
+		panic(err)
 	}
 
-    fmt.Println(value)
+	fmt.Println(value)
 }
 ```
 
