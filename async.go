@@ -70,7 +70,7 @@ func Await[T any](ch <-chan Option[T]) (value T, err error) {
 }
 
 // AwaitContext reads channel ch and unwraps option to value and error.
-// Can be interruped by closed context.
+// Can be interrupted by closed context.
 func AwaitContext[T any](ctx context.Context, ch <-chan Option[T]) (value T, err error) {
 	select {
 	case <-ctx.Done():
