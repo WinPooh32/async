@@ -1,8 +1,10 @@
 package async_test
 
 import (
+	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/WinPooh32/async"
 )
@@ -210,6 +212,63 @@ func TestAwait(t *testing.T) {
 	if v != 1 {
 		t.Fail()
 
+		return
+	}
+}
+
+func TestAwaitContext_Value(t *testing.T) {
+	const testValue = 1
+
+	ch := async.Go(func(ch chan<- async.Option[int]) {
+		ch <- async.MakeValue(testValue)
+	})
+
+	v, err := async.AwaitContext(context.Background(), ch)
+	if err != nil {
+		t.Error(err)
+
+		return
+	}
+
+	if v != 1 {
+		t.Fail()
+
+		return
+	}
+}
+
+func TestAwaitContext_CanceledContext(t *testing.T) {
+	const testValue = 1
+
+	ch := async.Go(func(ch chan<- async.Option[int]) {
+		<-time.After(10 * time.Second)
+		ch <- async.MakeValue(testValue)
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		<-time.After(50 * time.Millisecond)
+		cancel()
+	}()
+
+	_, err := async.AwaitContext(ctx, ch)
+
+	if !errors.Is(err, context.Canceled) {
+		t.Fail()
+		return
+	}
+}
+
+func TestAwaitContext_Err(t *testing.T) {
+	ch := async.Go(func(ch chan<- async.Option[int]) {
+		// Close channel without value at return.
+	})
+
+	_, err := async.AwaitContext(context.Background(), ch)
+
+	if !errors.Is(err, async.ErrChannelClosed) {
+		t.Fail()
 		return
 	}
 }

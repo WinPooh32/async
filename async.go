@@ -1,9 +1,13 @@
 package async
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"runtime/debug"
 )
+
+var ErrChannelClosed = errors.New("channel is closed")
 
 // Func is a channel writer callback.
 type Func[T any] func(chan<- Option[T])
@@ -62,6 +66,21 @@ func Go[T any](f Func[T], capacity ...int) <-chan Option[T] {
 
 // Await reads channel ch and unwraps option to value and error.
 func Await[T any](ch <-chan Option[T]) (value T, err error) {
-	opt := <-ch
-	return opt.Value(), opt.Err()
+	return AwaitContext(context.Background(), ch)
+}
+
+// AwaitContext reads channel ch and unwraps option to value and error.
+// Can be interruped by closed context.
+func AwaitContext[T any](ctx context.Context, ch <-chan Option[T]) (value T, err error) {
+	select {
+	case <-ctx.Done():
+		return value, ctx.Err()
+
+	case opt, ok := <-ch:
+		if !ok {
+			return value, ErrChannelClosed
+		}
+
+		return opt.Value(), opt.Err()
+	}
 }
