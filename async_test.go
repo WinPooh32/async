@@ -253,11 +253,14 @@ func TestAwaitContext_CanceledContext(t *testing.T) {
 	}()
 
 	_, err := async.AwaitContext(ctx, ch)
-
-	if !errors.Is(err, context.Canceled) {
-		t.Fail()
-		return
+	if err != nil {
+		if errors.Is(err, context.Canceled) {
+			return
+		}
+		t.Error(err)
 	}
+
+	t.Fail()
 }
 
 func TestAwaitContext_Err(t *testing.T) {
@@ -266,9 +269,12 @@ func TestAwaitContext_Err(t *testing.T) {
 	})
 
 	_, err := async.AwaitContext(context.Background(), ch)
-
-	if !errors.Is(err, async.ErrChannelClosed) {
-		t.Fail()
-		return
+	if err != nil {
+		if errors.Is(err, async.ErrChannelClosed) {
+			return
+		}
+		t.Error(err)
 	}
+
+	t.Fail()
 }
