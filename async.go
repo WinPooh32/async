@@ -34,8 +34,8 @@ func MakeErr[T any](err error) Option[T] {
 	return Option[T]{err: err}
 }
 
-// Go safely runs function f at a new goroutine. The ch channel will be closed automaticly after f returns.
-// If panic accurs inside of f it will be recovered and error will be written to the ch channel.
+// Go safely runs function f at a new goroutine. The ch channel will be closed automatically after f returns.
+// If panic occurs inside of f it will be recovered and error will be written to the ch channel.
 // If capacity is defined or greater than zero, buffered channel will be created.
 func Go[T any](f Func[T], capacity ...int) <-chan Option[T] {
 	var ch chan Option[T]
