@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"runtime/debug"
+	"sync"
 )
 
 var ErrChannelClosed = errors.New("channel is closed")
@@ -62,6 +63,32 @@ func Go[T any](f Func[T], capacity ...int) <-chan Option[T] {
 	}()
 
 	return ch
+}
+
+// Group runs g(i) functions in parallel, their output falls into one channel.
+// n is a count of passed functions. i is ranged from 0 to n-1.
+func Group[T any](g func(i int) Func[T], n int, capacity ...int) <-chan Option[T] {
+	fn := func(outCh chan<- Option[T]) {
+		var wg sync.WaitGroup
+
+		wg.Add(n)
+
+		for i := 0; i < n; i++ {
+			inCh := Go(g(i), 1)
+
+			go func() {
+				defer wg.Done()
+
+				for v := range inCh {
+					outCh <- v
+				}
+			}()
+		}
+
+		wg.Wait()
+	}
+
+	return Go(fn, capacity...)
 }
 
 // Await reads channel ch and unwraps option to value and error.
