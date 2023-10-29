@@ -11,7 +11,7 @@ import (
 var ErrChannelClosed = errors.New("channel is closed")
 
 // Func is a channel writer callback.
-type Func[T any] func(chan<- Option[T])
+type Func[T any] func(chan<- Option[T]) error
 
 // Option is a wrapped pair of value and error.
 type Option[T any] struct {
@@ -59,7 +59,12 @@ func Go[T any](f Func[T], capacity ...int) <-chan Option[T] {
 			}
 		}()
 
-		f(ch)
+		err := f(ch)
+		if err != nil {
+			ch <- MakeErr[T](err)
+
+			return
+		}
 	}()
 
 	return ch
@@ -68,7 +73,7 @@ func Go[T any](f Func[T], capacity ...int) <-chan Option[T] {
 // Group runs g(i) functions in parallel, their output falls into one channel.
 // n is a count of passed functions. i is ranged from 0 to n-1.
 func Group[T any](g func(i int) Func[T], n int, capacity ...int) <-chan Option[T] {
-	fn := func(outCh chan<- Option[T]) {
+	fn := func(outCh chan<- Option[T]) error {
 		var wg sync.WaitGroup
 
 		wg.Add(n)
@@ -86,6 +91,8 @@ func Group[T any](g func(i int) Func[T], n int, capacity ...int) <-chan Option[T
 		}
 
 		wg.Wait()
+
+		return nil
 	}
 
 	return Go(fn, capacity...)

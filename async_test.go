@@ -12,8 +12,10 @@ import (
 func TestGo_Value(t *testing.T) {
 	const testValue = 1
 
-	ch := async.Go(func(ch chan<- async.Option[int]) {
+	ch := async.Go(func(ch chan<- async.Option[int]) error {
 		ch <- async.MakeValue(testValue)
+
+		return nil
 	})
 
 	opt := <-ch
@@ -36,8 +38,10 @@ func TestGo_Value(t *testing.T) {
 func TestGo_Err(t *testing.T) {
 	testErr := errors.New("test error")
 
-	ch := async.Go(func(ch chan<- async.Option[int]) {
+	ch := async.Go(func(ch chan<- async.Option[int]) error {
 		ch <- async.MakeErr[int](testErr)
+
+		return nil
 	})
 
 	opt := <-ch
@@ -54,7 +58,7 @@ func TestGo_Err(t *testing.T) {
 }
 
 func TestGo_Panic(t *testing.T) {
-	ch := async.Go(func(ch chan<- async.Option[int]) {
+	ch := async.Go(func(ch chan<- async.Option[int]) error {
 		panic("something went wrong!")
 	})
 
@@ -71,10 +75,12 @@ func TestGo_Stream(t *testing.T) {
 	const testValue = 1
 	const testSum = 10
 
-	ch := async.Go(func(ch chan<- async.Option[int]) {
+	ch := async.Go(func(ch chan<- async.Option[int]) error {
 		for i := 0; i < testSum; i++ {
 			ch <- async.MakeValue(testValue)
 		}
+
+		return nil
 	})
 
 	var sum int
@@ -110,10 +116,12 @@ func TestGo_StreamBuffered(t *testing.T) {
 	const testSum = 10
 	const testChCapacity = 100
 
-	ch := async.Go(func(ch chan<- async.Option[int]) {
+	ch := async.Go(func(ch chan<- async.Option[int]) error {
 		for i := 0; i < testSum; i++ {
 			ch <- async.MakeValue(testValue)
 		}
+
+		return nil
 	}, testChCapacity)
 
 	var sum int
@@ -145,16 +153,22 @@ func TestGo_StreamBuffered(t *testing.T) {
 }
 
 func TestGo_Sync(t *testing.T) {
-	chA := async.Go(func(ch chan<- async.Option[string]) {
+	chA := async.Go(func(ch chan<- async.Option[string]) error {
 		ch <- async.MakeValue("A")
+
+		return nil
 	})
 
-	chB := async.Go(func(ch chan<- async.Option[string]) {
+	chB := async.Go(func(ch chan<- async.Option[string]) error {
 		ch <- async.MakeValue("B")
+
+		return nil
 	})
 
-	chC := async.Go(func(ch chan<- async.Option[string]) {
+	chC := async.Go(func(ch chan<- async.Option[string]) error {
 		ch <- async.MakeValue("C")
+
+		return nil
 	})
 
 	var errs []error
@@ -198,8 +212,10 @@ func TestGo_Sync(t *testing.T) {
 func TestAwait(t *testing.T) {
 	const testValue = 1
 
-	ch := async.Go(func(ch chan<- async.Option[int]) {
+	ch := async.Go(func(ch chan<- async.Option[int]) error {
 		ch <- async.MakeValue(testValue)
+
+		return nil
 	})
 
 	v, err := async.Await(ch)
@@ -219,8 +235,10 @@ func TestAwait(t *testing.T) {
 func TestAwaitContext_Value(t *testing.T) {
 	const testValue = 1
 
-	ch := async.Go(func(ch chan<- async.Option[int]) {
+	ch := async.Go(func(ch chan<- async.Option[int]) error {
 		ch <- async.MakeValue(testValue)
+
+		return nil
 	})
 
 	v, err := async.AwaitContext(context.Background(), ch)
@@ -240,9 +258,11 @@ func TestAwaitContext_Value(t *testing.T) {
 func TestAwaitContext_CanceledContext(t *testing.T) {
 	const testValue = 1
 
-	ch := async.Go(func(ch chan<- async.Option[int]) {
+	ch := async.Go(func(ch chan<- async.Option[int]) error {
 		<-time.After(10 * time.Second)
 		ch <- async.MakeValue(testValue)
+
+		return nil
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -264,8 +284,9 @@ func TestAwaitContext_CanceledContext(t *testing.T) {
 }
 
 func TestAwaitContext_Err(t *testing.T) {
-	ch := async.Go(func(ch chan<- async.Option[int]) {
+	ch := async.Go(func(ch chan<- async.Option[int]) error {
 		// Close channel without value at return.
+		return nil
 	})
 
 	_, err := async.AwaitContext(context.Background(), ch)
