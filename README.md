@@ -11,17 +11,28 @@ Run async code with safe!
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/WinPooh32/async"
 )
 
 func main() {
-	ch := async.Go(func(ch chan<- async.Option[string]) {
-		ch <- async.MakeValue("Hello Async!")
-	})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	value, err := async.Await(ch)
+	fn := func(ch chan<- async.Option[string]) error {
+		err := async.TrySend(ctx, ch, "Hello Async!")
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	ch := async.Go(ctx, fn)
+
+	value, err := async.Await(ctx, ch)
 	if err != nil {
 		panic(err)
 	}
