@@ -61,7 +61,7 @@ func Go[T any](ctx context.Context, f Func[T], capacity ...int) <-chan Option[T]
 		wg.Add(1)
 	}
 
-	cancel, _ := ctx.Value(contextKeyWG).(context.CancelFunc)
+	cancel, _ := ctx.Value(contextKeyCancel).(context.CancelFunc)
 
 	go func() {
 		if wg != nil {
