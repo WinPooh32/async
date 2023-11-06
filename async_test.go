@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/WinPooh32/async"
+	"github.com/WinPooh32/async/v2"
 )
 
 func TestGo_Value(t *testing.T) {
